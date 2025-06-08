@@ -40,7 +40,8 @@ venv\Scripts\activate     # Windows
 ### 3. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install Flask Flask-SQLAlchemy Werkzeug nltk spacy language-tool-python textstat reportlab python-docx PyPDF2 mysql-connector-python PyMySQL cryptography
+
 ```
 
 ### 4. Download Model NLP
