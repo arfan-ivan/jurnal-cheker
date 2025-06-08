@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Checker</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='arfanvn.png') }}" type="image/png">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #9bcdea 0%, #125ec6 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .container-main {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            padding: 2rem 2rem 0 2rem;
+        }
+        
+        .highlight-plagiarism {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: help;
+        }
+        
+        .highlight-grammar {
+            background-color: #ffd93d;
+            color: #333;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: help;
+        }
+        
+        .highlight-academic {
+            background-color: #74b9ff;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: help;
+        }
+        
+        .score-card {
+            background: linear-gradient(45deg,#88aed1, #466aa1d5);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .score-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .score-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .upload-area {
+            border: 3px dashed #4a98ff;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: #4b62a2;
+            background: rgba(118, 75, 162, 0.1);
+        }
+        
+        .btn-custom {
+            background: linear-gradient(45deg, #88aed1, #466ba1);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            color: white;
+        }
+        
+        .analysis-results {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .error-list {
+            background: #fff5f5;
+            border-left: 4px solid #ff6b6b;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .success-message {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .highlighted-text {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+        
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .nav-link {
+            color: #667eea !important;
+            font-weight: 600;
+        }
+        
+        .nav-link:hover {
+            color: #4b62a2 !important;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/" style="color: #669bea;">
+                <i class="fas fa-file-alt me-2"></i>Journal Checker
+            </a>
+            <div class="navbar-nav ms-auto">
+                <!-- <a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Home</a> -->
+                <a class="nav-link" href="/history"><i class="fas fa-history me-1"></i>History</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="container-main">
+            <div class="text-center mb-4">
+                <h1 class="display-4 fw-bold" style="color: #6694ea;">
+                    <i class="fas fa-search me-3"></i>Journal Analysis System
+                </h1>
+                <p class="lead text-muted">
+                    Comprehensive plagiarism detection, grammar checking, and format validation for academic papers
+                </p>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
+                        <h4>Upload Your Document</h4>
+                        <p class="text-muted mb-3">Drag and drop your file here or click to browse</p>
+                        
+                    </div>
+                    <br>
+                    <form id="uploadForm" enctype="multipart/form-data">
+                            <input type="file" class="form-control mb-3" id="fileInput" name="file" accept=".pdf,.docx,.txt" required>
+                            <select class="form-select mb-3" name="format" id="formatSelect">
+                                <option value="ieee">IEEE Format</option>
+                                <option value="apa">APA Format</option>
+                                <option value="mla">MLA Format</option>
+                            </select>
+                            <button type="submit" class="btn btn-custom btn-lg">
+                                <i class="fas fa-search me-2"></i>Analyze Document
+                            </button>
+                        </form>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>Analysis Features</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Plagiarism Detection</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Grammar & Spelling Check</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Academic Language Analysis</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Format Compliance Check</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Readability Assessment</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Downloadable Reports</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="card border-0 shadow-sm mt-3">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-file-alt me-2"></i>Supported Formats</h5>
+                            <br>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                                    <p class="small">PDF</p>
+                                </div>
+                                <div class="col-4">
+                                    <i class="fas fa-file-word fa-2x text-primary mb-2"></i>
+                                    <p class="small">DOCX</p>
+                                </div>
+                                <div class="col-4">
+                                    <i class="fas fa-file-alt fa-2x text-secondary mb-2"></i>
+                                    <p class="small">TXT</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Analyzing your document... This may take a few moments.</p>
+            </div>
+
+            <div class="analysis-results" id="analysisResults" style="display: none;">
+                <h3 class="mb-4"><i class="fas fa-chart-line me-2"></i>Analysis Results</h3>
+                
+                <div class="row" id="scoreCards">
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-lg-6">
+                        <h5><i class="fas fa-exclamation-triangle me-2"></i>Issues Found</h5>
+                        <div id="issuesList">
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <h5><i class="fas fa-download me-2"></i>Download Report</h5>
+                        <p class="text-muted">Get a detailed PDF report with all findings and recommendations.</p>
+                        <button class="btn btn-custom" id="downloadBtn">
+                            <i class="fas fa-download me-2"></i>Download PDF Report
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h5><i class="fas fa-highlighter me-2"></i>Highlighted Text</h5>
+                    <p class="text-muted mb-3">
+                        <span class="highlight-plagiarism">Red: Plagiarism</span>
+                        <span class="highlight-grammar ms-3">Yellow: Grammar</span>
+                        <span class="highlight-academic ms-3">Blue: Non-academic</span>
+                    </p>
+                    <div class="highlighted-text" id="highlightedText">
+                    </div>
+                </div>
+            </div>
+              <footer style="text-align: center; padding: 2em 0 0.1em 0; color: #5555555d;">
+    <p>&copy; 2025 ArfanVn. All rights reserved.</p>
+  </footer>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentAnalysisId = null;
+
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+            
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('analysisResults').style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('format', document.getElementById('formatSelect').value);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                
+                if (data.success) {
+                    currentAnalysisId = data.analysis_id;
+                    displayResults(data.results);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                console.error('Error:', error);
+                alert('An error occurred while analyzing the document.');
+            });
+        });
+
+        function displayResults(results) {
+            const scoreCards = document.getElementById('scoreCards');
+            scoreCards.innerHTML = `
+                <div class="col-md-3 mb-3">
+                    <div class="score-card text-center">
+                        <div class="score-number">${results.overall_score}</div>
+                        <div>Overall Score</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="score-card text-center">
+                        <div class="score-number">${results.plagiarism_score}%</div>
+                        <div>Plagiarism</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="score-card text-center">
+                        <div class="score-number">${results.grammar_error_count}</div>
+                        <div>Grammar Errors</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="score-card text-center">
+                        <div class="score-number">${results.academic_score}</div>
+                        <div>Academic Score</div>
+                    </div>
+                </div>
+            `;
+
+            // Display issues
+            const issuesList = document.getElementById('issuesList');
+            let issuesHtml = '';
+            
+            if (results.format_errors && results.format_errors.length > 0) {
+                issuesHtml += '<div class="error-list"><h6><i class="fas fa-exclamation-circle me-2"></i>Format Issues:</h6><ul>';
+                results.format_errors.forEach(error => {
+                    issuesHtml += `<li>${error}</li>`;
+                });
+                issuesHtml += '</ul></div>';
+            }
+            
+            if (results.non_academic_phrases && results.non_academic_phrases.length > 0) {
+                issuesHtml += '<div class="error-list"><h6><i class="fas fa-exclamation-circle me-2"></i>Non-Academic Language:</h6><ul>';
+                results.non_academic_phrases.forEach(phrase => {
+                    issuesHtml += `<li>${phrase}</li>`;
+                });
+                issuesHtml += '</ul></div>';
+            }
+            
+            if (results.plagiarism_results && results.plagiarism_results.length > 0) {
+                issuesHtml += '<div class="error-list"><h6><i class="fas fa-exclamation-circle me-2"></i>Potential Plagiarism:</h6><ul>';
+                results.plagiarism_results.forEach(item => {
+                    issuesHtml += `<li>Similarity: ${(item.similarity * 100).toFixed(1)}% with "${item.title}"</li>`;
+                });
+                issuesHtml += '</ul></div>';
+            }
+            
+            if (!issuesHtml) {
+                issuesHtml = '<div class="success-message"><i class="fas fa-check-circle me-2"></i>No major issues found!</div>';
+            }
+            
+            issuesList.innerHTML = issuesHtml;
+            
+            // Display highlighted text
+            document.getElementById('highlightedText').innerHTML = results.highlighted_text;
+            
+            // Show results
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('analysisResults').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (currentAnalysisId) {
+                window.location.href = `/download_report/${currentAnalysisId}`;
+            }
+        });
+
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadArea.style.borderColor = '#764ba2';
+            uploadArea.style.backgroundColor = 'rgba(118, 75, 162, 0.2)';
+        }
+
+        function unhighlight(e) {
+            uploadArea.style.borderColor = '#667eea';
+            uploadArea.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+            }
+        }
+
+        uploadArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+    </script>
+</body>
+</html>
+
+<!-- -ArfanVn- -->

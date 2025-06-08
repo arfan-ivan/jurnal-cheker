@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis History - Journal Checker</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='arfanvn.png') }}" type="image/png">
+    <style>
+        body {
+            background: linear-gradient(135deg, #9bcdea 0%, #125ec6 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .container-main {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .nav-link {
+            color: #66afea !important;
+            font-weight: 600;
+        }
+        
+        .nav-link:hover {
+            color: #4b74a2 !important;
+        }
+        
+        .history-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .history-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .score-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .score-excellent { background: linear-gradient(45deg, #48bb78, #38a169); }
+        .score-good { background: linear-gradient(45deg, #ed8936, #dd6b20); }
+        .score-poor { background: linear-gradient(45deg, #f56565, #e53e3e); }
+        
+        .btn-custom {
+            background: linear-gradient(45deg, #88aed1, #466ba1);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/" style="color: #669bea;">
+                <i class="fas fa-file-alt me-2"></i>Journal Checker
+            </a>
+            <div class="navbar-nav ms-auto">
+                <!-- <a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Home</a> -->
+                <a class="nav-link active" href="/history"><i class="fas fa-history me-1"></i>History</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="container-main">
+            <div class="text-center mb-4">
+                <h1 class="display-5 fw-bold" style="color: #6694ea;">
+                    <i class="fas fa-history me-3"></i>Analysis History
+                </h1>
+                <p class="lead text-muted">
+                    View your previous document analyses and download reports
+                </p>
+            </div>
+
+            {% if analyses %}
+                {% for analysis in analyses %}
+                <div class="history-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-2">
+                                <i class="fas fa-file me-2"></i>{{ analysis.filename }}
+                            </h5>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-calendar me-1"></i>{{ analysis.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </p>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-cog me-1"></i>Format: {{ analysis.journal_format.upper() }}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <small class="text-muted">Overall Score</small>
+                                    {% set overall_score = ((100 - analysis.plagiarism_score) * 0.3 + (100 - analysis.grammar_errors * 2) * 0.25 + analysis.academic_score * 0.25 + (100 - analysis.format_errors * 10) * 0.2) | round(1) %}
+                                    {% if overall_score >= 80 %}
+                                        <div class="score-badge score-excellent">{{ overall_score }}/100</div>
+                                    {% elif overall_score >= 60 %}
+                                        <div class="score-badge score-good">{{ overall_score }}/100</div>
+                                    {% else %}
+                                        <div class="score-badge score-poor">{{ overall_score }}/100</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Plagiarism</small>
+                                    <div class="fw-bold">{{ analysis.plagiarism_score }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <a href="/download_report/{{ analysis.id }}" class="btn btn-custom btn-sm">
+                                <i class="fas fa-download me-1"></i>Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Analysis History</h4>
+                    <p class="text-muted">You haven't analyzed any documents yet.</p>
+                    <a href="/" class="btn btn-custom btn-lg">
+                        <i class="fas fa-plus me-2"></i>Start Your First Analysis
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        <footer style="text-align: center; padding: 2em 0 0.1em 0; color: #ffffff;">
+    <p>&copy; 2025 ArfanVn. All rights reserved.</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+ <!-- -ArfanVn- -->
