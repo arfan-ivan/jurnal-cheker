@@ -24,8 +24,8 @@ Sistem pengecekan jurnal komprehensif dengan Flask yang mengintegrasikan berbaga
 ### 1. Clone atau Download Project
 
 ```bash
-mkdir journal_checker
-cd journal_checker
+git clone https://github.com/arfan-ivan/jurnal-cheker.git
+cd journal-checker
 ```
 
 ### 2. Setup Virtual Environment
@@ -75,9 +75,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://journal_user:your_secur
 Buat struktur folder yang diperlukan:
 
 ```
-journal_checker/
+journal-checker/
 ├── app.py
-├── requirements.txt
 ├── templates/
 │   ├── index.html
 │   └── history.html
